@@ -9,7 +9,7 @@
 typedef SparseMatrix_Double t_chebyshev;
 
 C74_HIDDEN void chebyshev_init(t_chebyshev*const matrix, long const count) {
-    long const nz = ( count / 2 + 1 ) * ( ( count + 1 ) / 2 );
+    register long const nz = ( count / 2 + 1 ) * ( ( count + 1 ) / 2 );
     void * const memory = sysmem_resizeptrclear(matrix->data, ( count + 1 ) * sizeof(long) + nz * (sizeof(double) + sizeof(int)));
     matrix->structure.rowCount = (int const)count;
     matrix->structure.columnCount = (int const)count;
@@ -38,12 +38,12 @@ C74_HIDDEN void chebyshev_init(t_chebyshev*const matrix, long const count) {
         matrix->structure.columnStarts[0] = 0;
         matrix->structure.columnStarts[1] = 1;
         matrix->structure.columnStarts[2] = 2;
-        for ( unsigned long c = 2, C = count ; c < C ; ++ c ) {
-            unsigned long const j = matrix->structure.columnStarts[c-2];
-            unsigned long const k = matrix->structure.columnStarts[c-1];
-            unsigned long const l = matrix->structure.columnStarts[c-0];
-            unsigned long const p = c % 2;
-            unsigned long const q = c / 2 + 1;
+        for ( register unsigned long c = 2, C = count ; c < C ; ++ c ) {
+            register unsigned long const j = matrix->structure.columnStarts[c-2];
+            register unsigned long const k = matrix->structure.columnStarts[c-1];
+            register unsigned long const l = matrix->structure.columnStarts[c-0];
+            register unsigned long const p = c % 2;
+            register unsigned long const q = c / 2 + 1;
             for ( register unsigned long r = 0, R = q ; r < R ; ++ r )
                 matrix->structure.rowIndices[l+r] = (int const)(2 * r + p);
             vDSP_vsmulD(matrix->data + k, 1, (double const[]){2.0}, matrix->data + l + 1 - p, 1, l - k);
@@ -56,13 +56,13 @@ C74_HIDDEN void chebyshev_free(t_chebyshev*const matrix) {
     sysmem_freeptr(matrix->data);
     matrix->data = NULL;
 }
-// Col-Vector <- Col-Vector
+// Col-Major Vector <- SparseMatrix * Col-Major Vector
 C74_HIDDEN void chebyshev_mv(t_chebyshev const*const matrix, double*const y, double*const x) {
     SparseMultiply(*matrix,
                    (DenseVector_Double const) { .data = x, .count = matrix->structure.columnCount, },
                    (DenseVector_Double const) { .data = y, .count = matrix->structure.rowCount, });
 }
-// Row-Major <- Sp * Row-Major
+// Row-Major Matrix <- SparseMatrix * Row-Major Matrix
 C74_HIDDEN void chebyshev_mm(t_chebyshev const*const matrix, double*const y, long const ldy, double*const x,long const ldx, long const length) {
     SparseMultiply(*matrix,
                    (DenseMatrix_Double const) {
@@ -128,8 +128,7 @@ C74_HIDDEN t_sinics const*const sinics_new(t_atom_float const value) {
 
 C74_HIDDEN void sinics_free(t_sinics const*const this) {
     chebyshev_free((t_chebyshev*const)&this->cheby);
-    if (this->coefs)
-        sysmem_freeptr((void*const)this->coefs);
+    sysmem_freeptr((void*const)this->coefs);
     systhread_mutex_free(this->mutex);
     z_dsp_free((t_pxobject*const)this);
 }
