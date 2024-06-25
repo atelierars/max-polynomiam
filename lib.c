@@ -247,6 +247,7 @@ C74_HIDDEN long input(t_polynomiam const*const this, long const index, long cons
 			*(uintptr_t*const)&this->split = chans;
 			return chans == 1;
 		case 1:
+			sparse_destroy((t_sparsematrix*const)&this->cheby);
 			sparse_chebyshev1((t_sparsematrix*const)&this->cheby, chans);
 			return true;
 	}
