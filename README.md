@@ -5,7 +5,7 @@ This repository contains source codes for an external object of MaxMSP that appl
 ## Features
 
 - **Higher Term Self Amplitude Modulation:** Applies amplitude modulation up to higher-order power terms.
-- **Additive Synthesis:** Provides pure harmonics for sine waves as an input, effectively functioning as additive synthesis.
+- **Additive Synthesis:** Provides pure harmonics for sine waves as an input, effectively functioning as additive synthesis. It is much more efficient than computing the sine function for each harmonic.
 - **Harmonics design:** Harmonic structure can be specified via list message or `mc.*` signal.
 
 ## Compatibility
