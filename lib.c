@@ -4,6 +4,7 @@
 #include<simd/simd.h>
 #include<Accelerate/Accelerate.h>
 typedef SparseMatrix_Double t_sparsematrix;
+__attribute__((__always_inline__))
 C74_HIDDEN void sparse_chebyshev1(t_sparsematrix*const matrix, long const count) {
 	register long const nz = ( ( count / 2 ) + 1 ) * ( ( count + 1 ) / 2 );
 	void * const memory = sysmem_resizeptrclear(matrix->data, ( count + 1 ) * sizeof(long const) + nz * (sizeof(double const) + sizeof(int const)));
@@ -52,17 +53,20 @@ C74_HIDDEN void sparse_chebyshev1(t_sparsematrix*const matrix, long const count)
 			break;
 	}
 }
+__attribute__((__always_inline__))
 C74_HIDDEN void sparse_destroy(t_sparsematrix*const matrix) {
 	sysmem_freeptr(matrix->data);
 	matrix->data = NULL;
 }
 // Col-Major Vector <- SparseMatrix * Col-Major Vector
+__attribute__((__always_inline__))
 C74_HIDDEN void sparse_gemv(t_sparsematrix const*const matrix, double*const y, double*const x) {
 	SparseMultiply(*matrix,
 				   (DenseVector_Double const) { .data = x, .count = matrix->structure.columnCount, },
 				   (DenseVector_Double const) { .data = y, .count = matrix->structure.rowCount, });
 }
 // Col-Major Matrix <- SparseMatrix * Col-Major Matrix
+__attribute__((__always_inline__))
 C74_HIDDEN void sparse_gemm_cc(t_sparsematrix const*const matrix, double*const y, long const ldy, double*const x, long const ldx, long const length) {
 	SparseMultiply(*matrix,
 				   (DenseMatrix_Double const) {
@@ -93,6 +97,7 @@ C74_HIDDEN void sparse_gemm_cc(t_sparsematrix const*const matrix, double*const y
 	});
 }
 // Row-Major Matrix <- SparseMatrix * Row-Major Matrix
+__attribute__((__always_inline__))
 C74_HIDDEN void sparse_gemm_rr(t_sparsematrix const*const matrix, double*const y, long const ldy, double*const x, long const ldx, long const length) {
 	SparseMultiply(*matrix,
 				   (DenseMatrix_Double const) {
@@ -186,6 +191,20 @@ C74_HIDDEN void dyn(t_polynomiam const*const this, t_object const*const dsp64, d
 	for ( register uintptr_t k = 1, K = np ; k < K ; ++ k, vDSP_vmulD(*ins, 1, z, 1, z, 1, length) )
 		vDSP_vmaD(z, 1, w + ld * k, 1, w, 1, w, 1, length);
 	sysmem_copyptr(w, *outs, length * sizeof(double const));
+	/*
+	vDSP_vfillD((double const[]){1}, z, 1, length);
+	for ( register uintptr_t k = 1, K = np ; k < K ; ++ k )
+		vDSP_vmulD(*ins, 1, z + ( k - 1 ) * ld, 1, z + ( k - 0 ) * ld, 1, length);
+	double x[np], y[np];
+	for ( register uintptr_t k = 0, K = length ; k < K ; ++ k ) {
+		for ( register uintptr_t n = 0, N = np ; n < N ; ++ n )
+			x[n] = ins[sp+n][k];
+		sparse_gemv(&this->cheby, y, x);
+		for ( register uintptr_t n = 0, N = np ; n < N ; ++ n )
+			x[n] = z[ld*n+k];
+		vDSP_dotprD(x, 1, y, 1, (*outs) + k, np);
+	}
+	*/
 }
 C74_HIDDEN void dsp64(t_polynomiam const*const this, t_object const*const dsp64, short const*const count, double const samplerate, long const maxvectorsize, long const flags) {
 	register long const length = this->cheby.structure.columnCount * 2 * maxvectorsize;
