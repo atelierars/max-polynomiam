@@ -1,4 +1,4 @@
-# Amplitude modulator with Chebyshev polynomials for MaxMSP
+# Amplitude modulator based on Chebyshev polynomials for MaxMSP
 
 This repository contains source codes for an external object of MaxMSP that applies self amplitude modulation in higher-order terms to the input signal. This object utilises Chebyshev polynomials and provides pure harmonics for sine waves. For other waveforms, some complex harmonics will be applied due to their cross terms in the spectrum structure.
 
