@@ -11,9 +11,13 @@ include_directories(
 )
 
 file(GLOB PROJECT_SRC
-     "*.h"
-	 "*.c"
-     "*.cpp"
+	"*.h"
+	"*.c"
+	"*.cpp"
+)
+add_definitions(
+	-DACCELERATE_NEW_LAPACK
+	-DACCELERATE_LAPACK_ILP64
 )
 add_library( 
 	${PROJECT_NAME} 
@@ -22,3 +26,4 @@ add_library(
 )
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
+target_link_libraries(${PROJECT_NAME} PRIVATE "-framework Accelerate")
